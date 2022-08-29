@@ -1,0 +1,58 @@
+# Aluno: Rosimari Mendes de Oliveira
+
+
+import pyrebase
+import os
+import stat
+from datetime import datetime as dt
+
+config = {
+    "apiKey": "AIzaSyB16BiAECtueSV7cU3OW2NRCTziyYRQ5Q0",
+    "authDomain": "somativapucpr.firebaseapp.com",
+    "projectId": "somativapucpr",
+    "databaseURL": "https://" + "somativapucpr" + ".firebaseio.com",
+    "storageBucket": "somativapucpr.appspot.com",
+    "messagingSenderId": "628543368962",
+    "appId": "1:628543368962:web:ca9b146586667ea1561c1b",
+    "measurementId": "G-TTXC47T65Z"
+}
+
+firebase_app = pyrebase.initialize_app(config)
+app = firebase_app.auth()
+
+user_email = str(input("digite o e-mail:"))
+user_password = str(input("digite a senha:"))
+
+try:
+  user = app.create_user_with_email_and_password(user_email, user_password)
+  login = app.sign_in_with_email_and_password(user_email, user_password)
+  app.send_email_verification(login["idToken"])
+  print('Usuário criado com sucesso!')
+  print('Verifique seu e-mail e valide seu e-mail')
+except:
+  print('Já existe um usuário para este e-mail')
+ 
+  login = app.sign_in_with_email_and_password(user_email, user_password)
+  
+  idToken = login["idToken"]
+
+  info_user = app.get_account_info(idToken)
+
+  emailVerified = info_user['users'][0]['emailVerified']
+  
+  if emailVerified:
+    if os.path.isfile("acesso.txt") == False:
+      arquivo = open("acesso.txt",'a')
+      arquivo.close()
+
+    if os.path.isfile("acesso.txt"):
+      os.chmod("acesso.txt", stat.S_IRWXU)
+
+    arquivo = open("acesso.txt",'w')
+    status = "E-mail:" + user_email + " - " + "Data Ultimo Acesso" + str(dt.now())
+    arquivo.write(status)
+    arquivo.close()
+    os.chmod("acesso.txt", stat.S_IRUSR)
+  else:
+    app.send_email_verification(idToken)
+    print('O e-mail do usuário não está verificado, favor verificar e-mail')
